@@ -1,0 +1,10 @@
+version: "3.8"
+
+services:
+  build:
+    image: gfm/haxe
+    build: .docker
+    volumes:
+      - .:/game
+    working_dir: /game
+    command: /game/.docker/build.sh
