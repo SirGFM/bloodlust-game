@@ -1,4 +1,4 @@
-package;
+package bloodlust.states;
 
 import flixel.FlxState;
 
