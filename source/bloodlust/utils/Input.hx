@@ -14,6 +14,8 @@ enum Action {
 	RIGHT;
 	UP;
 	DOWN;
+	ATTACK;
+	DASH;
 }
 
 /**
@@ -29,6 +31,8 @@ class Input extends FlxBasic {
 	private var _right:Array<FlxKey> = [FlxKey.D, FlxKey.RIGHT];
 	private var _up:Array<FlxKey> = [FlxKey.W, FlxKey.UP];
 	private var _down:Array<FlxKey> = [FlxKey.S, FlxKey.DOWN];
+	private var _attack:Array<FlxKey> = [FlxKey.X, FlxKey.J];
+	private var _dash:Array<FlxKey> = [FlxKey.C, FlxKey.K];
 
 	private var _actionKey:Map<Action, Array<FlxKey>>;
 
@@ -40,6 +44,8 @@ class Input extends FlxBasic {
 			RIGHT => this._right,
 			UP => this._up,
 			DOWN => this._down,
+			ATTACK => this._attack,
+			DASH => this._dash,
 		];
 	}
 
