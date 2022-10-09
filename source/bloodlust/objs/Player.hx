@@ -28,6 +28,9 @@ class Player extends FlxSprite {
 
 	static inline private var SPEED: Float = 175.0;
 	static inline private var PLAYER_SIZE: Int = 24;
+	static inline private var DASH_DISTANCE: Float = 125.0;
+	static inline private var DASH_TIME: Float = 0.3;
+
 	static inline private var AIM_SPRITE_SIZE: Int = 64;
 	static inline private var AIM_SPRITE_START: Float = AIM_SPRITE_SIZE * 2 / 8;
 	static inline private var AIM_SPRITE_END: Float = AIM_SPRITE_SIZE * 3 / 8;
@@ -72,6 +75,8 @@ class Player extends FlxSprite {
 	private var _aimStart: Float;
 	private var _aimPercentage: Float;
 
+	private var _dashDuration: Float;
+
 	private var _lastState: PlayerState;
 	private var _state: PlayerState;
 
@@ -113,7 +118,11 @@ class Player extends FlxSprite {
 	private function getNewState(): PlayerState {
 		switch (this._state) {
 		case DASHING:
-			{ /* TODO */ }
+			if (this._dashDuration <= 0.0) {
+				return STAND;
+			}
+
+			return DASHING;
 		case PREDASH:
 			/* Forcefully stop dash-aiming after a while. */
 			if (Timer.stamp() - this._aimStart > AIM_TIME) {
@@ -137,7 +146,7 @@ class Player extends FlxSprite {
 			this._state == PREDASH &&
 			this.plgInput.get(DASH, JUST_RELEASED)
 		) {
-			/* TODO */
+			return DASHING;
 		}
 		else if (this.plgInput.getAny([LEFT, RIGHT, UP, DOWN], PRESSED)) {
 			return WALK;
@@ -228,6 +237,20 @@ class Player extends FlxSprite {
 		dst.put();
 	}
 
+	private function setDash(elapsed:Float) {
+		if (this._lastState == DASHING) {
+			this._dashDuration -= elapsed;
+			return;
+		}
+
+		var p: Point = getRawDirection();
+		var speed: Float = DASH_DISTANCE / DASH_TIME;
+
+		GameMath.setNormalizedPoint(this.velocity, p.x, p.y, speed);
+		this._dashDuration = DASH_TIME;
+	}
+
+
 	override public function update(elapsed:Float) {
 		this._state = this.getNewState();
 		if (this._state != PREDASH) {
@@ -239,6 +262,8 @@ class Player extends FlxSprite {
 			this.setWalkSpeed();
 		case PREDASH:
 			this.setAim();
+		case DASHING:
+			this.setDash(elapsed);
 		case STAND:
 			this.velocity.scale(0);
 		default:
