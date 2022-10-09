@@ -5,10 +5,10 @@ import haxe.Timer;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.math.FlxPoint;
-import flixel.ui.FlxBar;
 import flixel.util.FlxColor;
 import flixel.util.FlxSpriteUtil;
 
+import bloodlust.ui.PlaystateUi;
 import bloodlust.utils.Input;
 import bloodlust.utils.GameMath;
 
@@ -34,13 +34,6 @@ class Player extends FlxSprite {
 	static inline private var AIM_SPRITE_SIZE: Int = 64;
 	static inline private var AIM_SPRITE_START: Float = AIM_SPRITE_SIZE * 2 / 8;
 	static inline private var AIM_SPRITE_END: Float = AIM_SPRITE_SIZE * 3 / 8;
-
-	static inline private var AIM_BAR_HEIGHT: Int = 16;
-	static inline private var AIM_BAR_OFFSET: Int = 2;
-	static inline private var AIM_BAR_BORDER: Int = 4;
-	static inline private var BAR_COLOR_BORDER: Int = 0xffd95763;
-	static inline private var BAR_COLOR_EMPTY: Int = 0xff45283c;
-	static inline private var BAR_COLOR_FILL: Int = 0xffac3232;
 
 	/* How long may the player take aiming. */
 	static inline private var AIM_TIME: Float = 5.0;
@@ -69,8 +62,8 @@ class Player extends FlxSprite {
 	}
 
 	private var plgInput: Input;
+	private var plgUi: PlaystateUi;
 
-	private var _aimBar: FlxBar;
 	private var _aim: FlxSprite;
 	private var _aimStart: Float;
 	private var _aimPercentage: Float;
@@ -85,31 +78,13 @@ class Player extends FlxSprite {
 
 		this.makeGraphic(PLAYER_SIZE, PLAYER_SIZE, FlxColor.RED);
 		this.plgInput = FlxG.plugins.get(Input);
+		this.plgUi = FlxG.plugins.get(PlaystateUi);
 
 		this._aim = new FlxSprite();
 		this._aim.makeGraphic(AIM_SPRITE_SIZE, AIM_SPRITE_SIZE, 0, true);
 		this._aim.width = this.width;
 		this._aim.height = this.height;
 		this._aim.centerOffsets();
-
-		this._aimBar = new FlxBar(
-			AIM_BAR_OFFSET + AIM_BAR_BORDER,
-			FlxG.height - AIM_BAR_HEIGHT - AIM_BAR_OFFSET - AIM_BAR_BORDER,
-			LEFT_TO_RIGHT,
-			FlxG.width - 2 * (AIM_BAR_OFFSET + AIM_BAR_BORDER),
-			AIM_BAR_HEIGHT,
-			null,
-			"",
-			0.0,
-			1.0,
-			true
-		);
-		this._aimBar.createFilledBar(
-			BAR_COLOR_EMPTY,
-			BAR_COLOR_FILL,
-			true,
-			BAR_COLOR_BORDER
-		);
 
 		this._state = STAND;
 		this._lastState = STAND;
@@ -195,6 +170,8 @@ class Player extends FlxSprite {
 		}
 		this._aimPercentage = Math.min(now - this._aimStart, AIM_TIME);
 		this._aimPercentage /= AIM_TIME;
+		this.plgUi.setAimBar(this._aimPercentage);
+
 		FlxG.timeScale = getTimeScale();
 
 		p = getRawDirection();
@@ -255,6 +232,7 @@ class Player extends FlxSprite {
 		this._state = this.getNewState();
 		if (this._state != PREDASH) {
 			FlxG.timeScale = 1.0;
+			this.plgUi.hideAimBar();
 		}
 
 		switch (this._state) {
@@ -278,9 +256,6 @@ class Player extends FlxSprite {
 	override public function draw() {
 		if (this._state == PREDASH) {
 			this._aim.draw();
-
-			this._aimBar.value = 1.0 - this._aimPercentage;
-			this._aimBar.draw();
 		}
 
 		super.draw();

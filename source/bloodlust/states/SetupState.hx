@@ -3,6 +3,7 @@ package bloodlust.states;
 import flixel.FlxG;
 import flixel.FlxState;
 
+import bloodlust.ui.PlaystateUi;
 import bloodlust.utils.Input;
 
 /**
@@ -14,6 +15,7 @@ class SetupState extends FlxState {
 		super.create();
 
 		FlxG.plugins.add(new Input());
+		FlxG.plugins.add(new PlaystateUi());
 
 		FlxG.switchState(new PlayState());
 	}
