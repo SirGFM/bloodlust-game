@@ -46,14 +46,14 @@ class Player extends FlxSprite {
 	 * until it starts increasing again. */
 	static inline private var AIM_SLOWDOWN_PERCENTAGE: Float = 0.1;
 
-	private function getTimeScale(): Float {
+	private function getTimeScale(percentage: Float): Float {
 		var perc: Float;
 
-		if (this._aimPercentage < AIM_SLOWDOWN_PERCENTAGE) {
-			perc = this._aimPercentage / AIM_SLOWDOWN_PERCENTAGE;
+		if (percentage < AIM_SLOWDOWN_PERCENTAGE) {
+			perc = percentage / AIM_SLOWDOWN_PERCENTAGE;
 		}
 		else {
-			perc = this._aimPercentage - AIM_SLOWDOWN_PERCENTAGE;
+			perc = percentage - AIM_SLOWDOWN_PERCENTAGE;
 			perc /= 1.0 - AIM_SLOWDOWN_PERCENTAGE;
 			perc = 1.0 - perc;
 		}
@@ -66,7 +66,6 @@ class Player extends FlxSprite {
 
 	private var _aim: FlxSprite;
 	private var _aimStart: Float;
-	private var _aimPercentage: Float;
 
 	private var _dashDuration: Float;
 
@@ -163,16 +162,17 @@ class Player extends FlxSprite {
 		var src: FlxPoint;
 		var dst: FlxPoint;
 		var p: Point;
+		var percentage: Float;
 
 		var now: Float = Timer.stamp();
 		if (this._lastState != PREDASH) {
 			this._aimStart = now;
 		}
-		this._aimPercentage = Math.min(now - this._aimStart, AIM_TIME);
-		this._aimPercentage /= AIM_TIME;
-		this.plgUi.setAimBar(this._aimPercentage);
+		percentage = Math.min(now - this._aimStart, AIM_TIME);
+		percentage /= AIM_TIME;
+		this.plgUi.setAimBar(percentage);
 
-		FlxG.timeScale = getTimeScale();
+		FlxG.timeScale = getTimeScale(percentage);
 
 		p = getRawDirection();
 		src = FlxPoint.get();
