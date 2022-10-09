@@ -7,6 +7,11 @@ import flixel.util.FlxColor;
 import bloodlust.utils.Input;
 import bloodlust.utils.GameMath;
 
+private typedef Point = {
+	x: Float,
+	y: Float,
+}
+
 class Player extends FlxSprite {
 	static inline private var SPEED: Float = 175.0;
 
@@ -19,31 +24,33 @@ class Player extends FlxSprite {
 		this.plgInput = FlxG.plugins.get(Input);
 	}
 
-	private function setWalkSpeed() {
-		var x:Float;
-		var y:Float;
+	private function getRawDirection(): Point {
+		var p: Point = {
+			x: 0.0,
+			y: 0.0
+		};
 
 		if (this.plgInput.get(UP, PRESSED)) {
-			y = -1;
+			p.y = -1.0;
 		}
 		else if (this.plgInput.get(DOWN, PRESSED)) {
-			y = 1;
-		}
-		else {
-			y = 0;
+			p.y = 1.0;
 		}
 
 		if (this.plgInput.get(LEFT, PRESSED)) {
-			x = -1;
+			p.x = -1.0;
 		}
 		else if (this.plgInput.get(RIGHT, PRESSED)) {
-			x = 1;
-		}
-		else {
-			x = 0;
+			p.x = 1.0;
 		}
 
-		GameMath.setNormalizedPoint(this.velocity, x, y, SPEED);
+		return p;
+	}
+
+	private function setWalkSpeed() {
+		var p: Point = getRawDirection();
+
+		GameMath.setNormalizedPoint(this.velocity, p.x, p.y, SPEED);
 	}
 
 	override public function update(elapsed:Float) {
