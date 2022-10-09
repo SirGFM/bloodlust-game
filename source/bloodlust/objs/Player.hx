@@ -13,14 +13,16 @@ private typedef Point = {
 }
 
 class Player extends FlxSprite {
+
 	static inline private var SPEED: Float = 175.0;
+	static inline private var PLAYER_SIZE: Int = 24;
 
 	private var plgInput: Input;
 
 	override public function new() {
 		super();
 
-		this.makeGraphic(24, 24, FlxColor.RED);
+		this.makeGraphic(PLAYER_SIZE, PLAYER_SIZE, FlxColor.RED);
 		this.plgInput = FlxG.plugins.get(Input);
 	}
 
