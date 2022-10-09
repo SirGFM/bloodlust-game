@@ -58,4 +58,21 @@ class Input extends FlxBasic {
 			return !FlxG.keys.anyPressed(this._actionKey[action]);
 		}
 	}
+
+	/**
+	 * Retrieve whether any of the given actions is in a given state.
+	 */
+	public function getAny(actions: Array<Action>, state: FlxInputState):Bool {
+		if (state == RELEASED) {
+			return !getAny(actions, PRESSED);
+		}
+
+		for (action in actions) {
+			if (this.get(action, state)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
 }
