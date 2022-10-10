@@ -4,9 +4,7 @@ import haxe.Timer;
 
 import flixel.FlxG;
 import flixel.FlxSprite;
-import flixel.math.FlxPoint;
 import flixel.util.FlxColor;
-import flixel.util.FlxSpriteUtil;
 
 import bloodlust.ui.PlaystateUi;
 import bloodlust.utils.Input;
@@ -30,10 +28,6 @@ class Player extends FlxSprite {
 	static inline private var PLAYER_SIZE: Int = 24;
 	static inline private var DASH_DISTANCE: Float = 125.0;
 	static inline private var DASH_TIME: Float = 0.3;
-
-	static inline private var AIM_SPRITE_SIZE: Int = 64;
-	static inline private var AIM_SPRITE_START: Float = AIM_SPRITE_SIZE * 2 / 8;
-	static inline private var AIM_SPRITE_END: Float = AIM_SPRITE_SIZE * 3 / 8;
 
 	/* How long may the player take aiming. */
 	static inline private var AIM_TIME: Float = 5.0;
@@ -64,7 +58,6 @@ class Player extends FlxSprite {
 	private var plgInput: Input;
 	private var plgUi: PlaystateUi;
 
-	private var _aim: FlxSprite;
 	private var _aimStart: Float;
 
 	private var _dashDuration: Float;
@@ -79,11 +72,7 @@ class Player extends FlxSprite {
 		this.plgInput = FlxG.plugins.get(Input);
 		this.plgUi = FlxG.plugins.get(PlaystateUi);
 
-		this._aim = new FlxSprite();
-		this._aim.makeGraphic(AIM_SPRITE_SIZE, AIM_SPRITE_SIZE, 0, true);
-		this._aim.width = this.width;
-		this._aim.height = this.height;
-		this._aim.centerOffsets();
+		this.plgUi.centerAimToPlayer(this.width, this.height);
 
 		this._state = STAND;
 		this._lastState = STAND;
@@ -159,8 +148,6 @@ class Player extends FlxSprite {
 	}
 
 	private function setAim() {
-		var src: FlxPoint;
-		var dst: FlxPoint;
 		var p: Point;
 		var percentage: Float;
 
@@ -175,43 +162,7 @@ class Player extends FlxSprite {
 		FlxG.timeScale = getTimeScale(percentage);
 
 		p = getRawDirection();
-		src = FlxPoint.get();
-		dst = FlxPoint.get();
-		GameMath.setNormalizedPoint(src, p.x, p.y, AIM_SPRITE_START);
-		GameMath.setNormalizedPoint(dst, p.x, p.y, AIM_SPRITE_END);
-
-		p.x = this._aim.frameWidth * 0.5;
-		p.y = this._aim.frameHeight * 0.5;
-
-		FlxSpriteUtil.fill(this._aim, 0);
-
-		FlxSpriteUtil.drawLine(
-			this._aim,
-			Math.fround(p.x + src.x),
-			Math.fround(p.y + src.y),
-			Math.fround(p.x + dst.x),
-			Math.fround(p.y + dst.y),
-			{
-				thickness: 3,
-				color: FlxColor.BLACK
-			}
-		);
-		FlxSpriteUtil.drawLine(
-			this._aim,
-			Math.fround(p.x + src.x),
-			Math.fround(p.y + src.y),
-			Math.fround(p.x + dst.x),
-			Math.fround(p.y + dst.y),
-			{
-				thickness: 2,
-				color: FlxColor.WHITE
-			}
-		);
-		this._aim.x = this.x;
-		this._aim.y = this.y;
-
-		src.put();
-		dst.put();
+		this.plgUi.configureAim(this.x, this.y, p.x, p.y);
 	}
 
 	private function setDash(elapsed:Float) {
@@ -233,6 +184,7 @@ class Player extends FlxSprite {
 		if (this._state != PREDASH) {
 			FlxG.timeScale = 1.0;
 			this.plgUi.hideAimBar();
+			this.plgUi.hideAim();
 		}
 
 		switch (this._state) {
@@ -251,14 +203,6 @@ class Player extends FlxSprite {
 		super.update(elapsed);
 
 		this._lastState = this._state;
-	}
-
-	override public function draw() {
-		if (this._state == PREDASH) {
-			this._aim.draw();
-		}
-
-		super.draw();
 	}
 }
 

@@ -1,8 +1,14 @@
 package bloodlust.ui;
 
 import flixel.FlxG;
+import flixel.FlxSprite;
 import flixel.group.FlxGroup;
+import flixel.math.FlxPoint;
 import flixel.ui.FlxBar;
+import flixel.util.FlxColor;
+import flixel.util.FlxSpriteUtil;
+
+import bloodlust.utils.GameMath;
 
 class PlaystateUi extends FlxGroup {
 
@@ -16,6 +22,14 @@ class PlaystateUi extends FlxGroup {
 	/** The bar displaying the dash-window,
 	 * after which the dash is simply canceled. */
 	private var _aimBar: FlxBar;
+
+	static inline private var AIM_SPRITE_SIZE: Int = 64;
+	static inline private var AIM_SPRITE_START: Float = AIM_SPRITE_SIZE * 2 / 8;
+	static inline private var AIM_SPRITE_END: Float = AIM_SPRITE_SIZE * 3 / 8;
+
+	/** The aim that stays over the player,
+	 * indicating where they are dashing toward. */
+	private var _aim: FlxSprite;
 
 	override public function new() {
 		super();
@@ -34,6 +48,9 @@ class PlaystateUi extends FlxGroup {
 		);
 
 		this.add(this._aimBar);
+
+		this._aim = new FlxSprite();
+		this.add(this._aim);
 	}
 
 	/**
@@ -52,6 +69,9 @@ class PlaystateUi extends FlxGroup {
 			BAR_COLOR_BORDER
 		);
 		this.hideAimBar();
+
+		this._aim.makeGraphic(AIM_SPRITE_SIZE, AIM_SPRITE_SIZE, 0, true);
+		this.hideAim();
 
 		this.revive();
 	}
@@ -76,6 +96,77 @@ class PlaystateUi extends FlxGroup {
 			this.showAimBar();
 		}
 		this._aimBar.value = 1.0 - value;
+	}
+
+	/**
+	 * Configure the aim's dimensions, so it's properly centered to the player.
+	 */
+	public function centerAimToPlayer(width: Float, height: Float) {
+		this._aim.width = width;
+		this._aim.height = height;
+		this._aim.centerOffsets();
+	}
+
+	public function showAim() {
+		this._aim.revive();
+	}
+
+	public function hideAim() {
+		this._aim.kill();
+	}
+
+	/**
+	 * Draw the aim at the player's (x, y) position,
+	 * pointing in the (dx, dy) direction.
+	 *
+	 * dx and dy must be a number between -1.0 and 1.0.
+	 */
+	public function configureAim(x: Float, y: Float, dx: Float, dy: Float) {
+		var src: FlxPoint;
+		var dst: FlxPoint;
+
+		if (!this._aim.alive) {
+			this.showAim();
+		}
+
+		src = FlxPoint.get();
+		dst = FlxPoint.get();
+		GameMath.setNormalizedPoint(src, dx, dy, AIM_SPRITE_START);
+		GameMath.setNormalizedPoint(dst, dx, dy, AIM_SPRITE_END);
+
+		dx = this._aim.frameWidth * 0.5;
+		dy = this._aim.frameHeight * 0.5;
+
+		FlxSpriteUtil.fill(this._aim, 0);
+
+		/* Draw a small black outline around the aim. */
+		FlxSpriteUtil.drawLine(
+			this._aim,
+			Math.fround(dx + src.x),
+			Math.fround(dy + src.y),
+			Math.fround(dx + dst.x),
+			Math.fround(dy + dst.y),
+			{
+				thickness: 3,
+				color: FlxColor.BLACK
+			}
+		);
+		FlxSpriteUtil.drawLine(
+			this._aim,
+			Math.fround(dx + src.x),
+			Math.fround(dy + src.y),
+			Math.fround(dx + dst.x),
+			Math.fround(dy + dst.y),
+			{
+				thickness: 2,
+				color: FlxColor.WHITE
+			}
+		);
+		this._aim.x = x;
+		this._aim.y = y;
+
+		src.put();
+		dst.put();
 	}
 
 	/**
