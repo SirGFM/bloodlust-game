@@ -60,7 +60,7 @@ class Player extends FlxSprite {
 
 	private var _aimStart: Float;
 
-	private var _dashDuration: Float;
+	private var _cooldown: Float;
 
 	private var _lastState: PlayerState;
 	private var _state: PlayerState;
@@ -81,7 +81,7 @@ class Player extends FlxSprite {
 	private function getNewState(): PlayerState {
 		switch (this._state) {
 		case DASHING:
-			if (this._dashDuration <= 0.0) {
+			if (this._cooldown <= 0.0) {
 				return STAND;
 			}
 
@@ -167,7 +167,6 @@ class Player extends FlxSprite {
 
 	private function setDash(elapsed:Float) {
 		if (this._lastState == DASHING) {
-			this._dashDuration -= elapsed;
 			return;
 		}
 
@@ -175,11 +174,15 @@ class Player extends FlxSprite {
 		var speed: Float = DASH_DISTANCE / DASH_TIME;
 
 		GameMath.setNormalizedPoint(this.velocity, p.x, p.y, speed);
-		this._dashDuration = DASH_TIME;
+		this._cooldown = DASH_TIME;
 	}
 
 
 	override public function update(elapsed:Float) {
+		if (this._cooldown > 0) {
+			this._cooldown -= elapsed;
+		}
+
 		this._state = this.getNewState();
 		if (this._state != PREDASH) {
 			FlxG.timeScale = 1.0;
