@@ -28,4 +28,15 @@ class GameMath {
 		target.y = y / divisor;
 		target.scale(magnitude);
 	}
+
+	/**
+	 * Linearly interpolate between two values.
+	 */
+	static public function linear(
+		from: Float,
+		to: Float,
+		percentage: Float
+	): Float {
+		return from + (to - from) * percentage;
+	}
 }

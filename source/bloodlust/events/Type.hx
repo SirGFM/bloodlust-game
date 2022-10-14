@@ -5,6 +5,7 @@ import flixel.FlxObject;
 enum Type {
 	UNKNOWN;
 	PLAYER;
+	ATTACK_DISC;
 }
 
 interface IType {
