@@ -159,6 +159,45 @@ class Player extends FlxSprite
 		return STAND;
 	}
 
+	private function changeState(): Void {
+		switch (this._state) {
+		case PREDASH:
+			this._aimStart = Timer.stamp();
+		case DASHING:
+			var p: Point = getRawDirection();
+			var speed: Float = DASH_DISTANCE / DASH_TIME;
+
+			GameMath.setNormalizedPoint(this.velocity, p.x, p.y, speed);
+			this._cooldown = DASH_TIME;
+		case DASH_ATTACK:
+			this._cooldown = this._spanwer.newAttack(
+				this.x + this.width * 0.5,
+				this.y + this.height * 0.5,
+				0.0,
+				0.0,
+				Std.int(this.health),
+				this
+			);
+
+			/* Damage the player if it isn't able to launch a new attack. */
+			if (this._cooldown < 0.0) {
+				this.hurt(1.0);
+				this._state = STAND;
+			}
+			else {
+				this._hurtOnRecover = true;
+			}
+		default:
+			{ /* do nothing */ }
+		}
+
+		if (this._state != PREDASH) {
+			FlxG.timeScale = 1.0;
+			this.plgUi.hideAimBar();
+			this.plgUi.hideAim();
+		}
+	}
+
 	private function getRawDirection(): Point {
 		var p: Point = {
 			x: 0.0,
@@ -193,9 +232,6 @@ class Player extends FlxSprite
 		var percentage: Float;
 
 		var now: Float = Timer.stamp();
-		if (this._lastState != PREDASH) {
-			this._aimStart = now;
-		}
 		percentage = Math.min(now - this._aimStart, AIM_TIME);
 		percentage /= AIM_TIME;
 		this.plgUi.setAimBar(percentage);
@@ -204,18 +240,6 @@ class Player extends FlxSprite
 
 		p = getRawDirection();
 		this.plgUi.configureAim(this.x, this.y, p.x, p.y);
-	}
-
-	private function setDash(elapsed:Float) {
-		if (this._lastState == DASHING) {
-			return;
-		}
-
-		var p: Point = getRawDirection();
-		var speed: Float = DASH_DISTANCE / DASH_TIME;
-
-		GameMath.setNormalizedPoint(this.velocity, p.x, p.y, speed);
-		this._cooldown = DASH_TIME;
 	}
 
 	public function didAttack(): Void {
@@ -246,10 +270,8 @@ class Player extends FlxSprite
 		}
 
 		this._state = this.getNewState();
-		if (this._state != PREDASH) {
-			FlxG.timeScale = 1.0;
-			this.plgUi.hideAimBar();
-			this.plgUi.hideAim();
+		if (this._state != this._lastState) {
+			this.changeState();
 		}
 
 		switch (this._state) {
@@ -257,8 +279,6 @@ class Player extends FlxSprite
 			this.setWalkSpeed();
 		case PREDASH:
 			this.setAim();
-		case DASHING:
-			this.setDash(elapsed);
 		case STAND | DASH_ATTACK:
 			this.velocity.scale(0);
 		default:

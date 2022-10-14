@@ -68,12 +68,12 @@ class PlaystateUi extends FlxGroup {
 			true,
 			BAR_COLOR_BORDER
 		);
-		this.hideAimBar();
 
 		this._aim.makeGraphic(AIM_SPRITE_SIZE, AIM_SPRITE_SIZE, 0, true);
-		this.hideAim();
 
 		this.revive();
+		this.hideAimBar();
+		this.hideAim();
 	}
 
 	public function showAimBar() {
