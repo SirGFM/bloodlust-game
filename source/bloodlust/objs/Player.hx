@@ -6,6 +6,7 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.util.FlxColor;
 
+import bloodlust.events.Type;
 import bloodlust.ui.PlaystateUi;
 import bloodlust.utils.Input;
 import bloodlust.utils.GameMath;
@@ -22,7 +23,7 @@ private typedef Point = {
 	y: Float,
 }
 
-class Player extends FlxSprite {
+class Player extends FlxSprite implements IType {
 
 	static inline private var SPEED: Float = 175.0;
 	static inline private var PLAYER_SIZE: Int = 24;
@@ -177,6 +178,9 @@ class Player extends FlxSprite {
 		this._cooldown = DASH_TIME;
 	}
 
+	public function getType(): Type {
+		return PLAYER;
+	}
 
 	override public function update(elapsed:Float) {
 		if (this._cooldown > 0) {
