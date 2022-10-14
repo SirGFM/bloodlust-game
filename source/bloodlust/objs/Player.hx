@@ -6,6 +6,7 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.util.FlxColor;
 
+import bloodlust.events.Ifaces;
 import bloodlust.events.Type;
 import bloodlust.ui.PlaystateUi;
 import bloodlust.utils.Input;
@@ -16,6 +17,7 @@ private enum PlayerState {
 	WALK;
 	PREDASH;
 	DASHING;
+	DASH_ATTACK;
 }
 
 private typedef Point = {
@@ -23,12 +25,15 @@ private typedef Point = {
 	y: Float,
 }
 
-class Player extends FlxSprite implements IType {
-
+class Player extends FlxSprite
+	implements AttackEvents
+	implements IType
+{
 	static inline private var SPEED: Float = 175.0;
 	static inline private var PLAYER_SIZE: Int = 24;
 	static inline private var DASH_DISTANCE: Float = 125.0;
 	static inline private var DASH_TIME: Float = 0.3;
+	static inline private var BASE_HEALTH: Float = 5.0;
 
 	/* How long may the player take aiming. */
 	static inline private var AIM_TIME: Float = 5.0;
@@ -66,7 +71,13 @@ class Player extends FlxSprite implements IType {
 	private var _lastState: PlayerState;
 	private var _state: PlayerState;
 
-	override public function new() {
+	private var _spanwer: AttackSpawner;
+
+	/** Whether the player should be hurt when recovering the attack.
+	 * This should be set on dash attack, and cleared if any enemy is hit. */
+	private var _hurtOnRecover: Bool;
+
+	override public function new(spawner: AttackSpawner) {
 		super();
 
 		this.makeGraphic(PLAYER_SIZE, PLAYER_SIZE, FlxColor.RED);
@@ -75,8 +86,12 @@ class Player extends FlxSprite implements IType {
 
 		this.plgUi.centerAimToPlayer(this.width, this.height);
 
+		this._spanwer = spawner;
+
 		this._state = STAND;
 		this._lastState = STAND;
+
+		this.health = BASE_HEALTH;
 	}
 
 	private function getNewState(): PlayerState {
@@ -85,8 +100,33 @@ class Player extends FlxSprite implements IType {
 			if (this._cooldown <= 0.0) {
 				return STAND;
 			}
+			else if (this.plgInput.get(ATTACK, JUST_PRESSED)) {
+				this._cooldown = this._spanwer.newAttack(
+					this.x + this.width * 0.5,
+					this.y + this.height * 0.5,
+					0.0,
+					0.0,
+					Std.int(this.health),
+					this
+				);
+
+				/* Damage the player if it isn't able to launch a new attack. */
+				if (this._cooldown < 0.0) {
+					this.hurt(1.0);
+					return STAND;
+				}
+
+				this._hurtOnRecover = true;
+				return DASH_ATTACK;
+			}
 
 			return DASHING;
+		case DASH_ATTACK:
+			if (this._cooldown <= 0.0) {
+				return STAND;
+			}
+
+			return DASH_ATTACK;
 		case PREDASH:
 			/* Forcefully stop dash-aiming after a while. */
 			if (Timer.stamp() - this._aimStart > AIM_TIME) {
@@ -178,6 +218,24 @@ class Player extends FlxSprite implements IType {
 		this._cooldown = DASH_TIME;
 	}
 
+	public function didAttack(): Void {
+		if (this._state == DASH_ATTACK) {
+			this.hurt(-1);
+			this._hurtOnRecover = false;
+		}
+	}
+
+	public function attackRecoverTimeout(): Void {
+		this.hurt(1);
+	}
+
+	public function onRecover(): Void {
+		if (this._hurtOnRecover) {
+			this._hurtOnRecover = false;
+			this.hurt(1);
+		}
+	}
+
 	public function getType(): Type {
 		return PLAYER;
 	}
@@ -201,7 +259,7 @@ class Player extends FlxSprite implements IType {
 			this.setAim();
 		case DASHING:
 			this.setDash(elapsed);
-		case STAND:
+		case STAND | DASH_ATTACK:
 			this.velocity.scale(0);
 		default:
 			{ /* do nothing */ }

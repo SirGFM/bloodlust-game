@@ -4,13 +4,18 @@ import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxState;
 
+import bloodlust.events.Ifaces;
 import bloodlust.events.Type;
+import bloodlust.objs.AttackDisc;
 import bloodlust.objs.Player;
 import bloodlust.ui.PlaystateUi;
 
-class PlayState extends FlxState {
+class PlayState extends FlxState implements AttackSpawner {
 
 	private var plgUi: PlaystateUi;
+
+	private var _attack: AttackDisc;
+	private var _player: Player;
 
 	override public function create() {
 		super.create();
@@ -18,7 +23,26 @@ class PlayState extends FlxState {
 		plgUi = FlxG.plugins.get(PlaystateUi);
 		plgUi.onEnterPlaystate();
 
-		this.add(new Player());
+		this._attack = new AttackDisc();
+		this.add(this._attack);
+
+		this._player = new Player(this);
+		this.add(this._player);
+	}
+
+	public function newAttack(
+		cx: Float,
+		cy: Float,
+		dx: Float,
+		dy: Float,
+		power: Int,
+		cb: AttackEvents
+	): Float {
+		if (this._attack.alive) {
+			return -1.0;
+		}
+
+		return this._attack.activate(cx, cy, dx, dy, power, this._player);
 	}
 
 	override public function update(elapsed:Float) {
