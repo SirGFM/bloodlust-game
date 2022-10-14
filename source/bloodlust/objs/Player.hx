@@ -96,67 +96,40 @@ class Player extends FlxSprite
 
 	private function getNewState(): PlayerState {
 		switch (this._state) {
-		case DASHING:
-			if (this._cooldown <= 0.0) {
-				return STAND;
+		case STAND | WALK:
+			if (this.plgInput.get(DASH, JUST_PRESSED)) {
+				return PREDASH;
 			}
-			else if (this.plgInput.get(ATTACK, JUST_PRESSED)) {
-				this._cooldown = this._spanwer.newAttack(
-					this.x + this.width * 0.5,
-					this.y + this.height * 0.5,
-					0.0,
-					0.0,
-					Std.int(this.health),
-					this
-				);
-
-				/* Damage the player if it isn't able to launch a new attack. */
-				if (this._cooldown < 0.0) {
-					this.hurt(1.0);
-					return STAND;
-				}
-
-				this._hurtOnRecover = true;
-				return DASH_ATTACK;
+			else if (this.plgInput.getAny([LEFT, RIGHT, UP, DOWN], PRESSED)) {
+				return WALK;
 			}
 
-			return DASHING;
-		case DASH_ATTACK:
-			if (this._cooldown <= 0.0) {
-				return STAND;
-			}
-
-			return DASH_ATTACK;
+			return STAND;
 		case PREDASH:
-			/* Forcefully stop dash-aiming after a while. */
+			/* Forcefully stop dash-aiming after a while.
+			 * Since time slows down during the pre-dash,
+			 * this cooldown must be implemented manually. */
 			if (Timer.stamp() - this._aimStart > AIM_TIME) {
 				return STAND;
 			}
-		default:
-			{ /* Do nothing */ }
-		}
+			else if (this.plgInput.get(DASH, JUST_RELEASED)) {
+				return DASHING;
+			}
 
-		if (
-			(
-				this._state != PREDASH &&
-				this._state != DASHING &&
-				this.plgInput.get(DASH, JUST_PRESSED)
-			) ||
-			(this._state == PREDASH && this.plgInput.get(DASH, PRESSED))
-		) {
 			return PREDASH;
-		}
-		else if (
-			this._state == PREDASH &&
-			this.plgInput.get(DASH, JUST_RELEASED)
-		) {
-			return DASHING;
-		}
-		else if (this.plgInput.getAny([LEFT, RIGHT, UP, DOWN], PRESSED)) {
-			return WALK;
-		}
+		case state:
+			if (this._cooldown <= 0.0) {
+				return STAND;
+			}
+			else if (
+				state == DASHING &&
+				this.plgInput.get(ATTACK, JUST_PRESSED)
+			) {
+				return DASH_ATTACK;
+			}
 
-		return STAND;
+			return state;
+		}
 	}
 
 	private function changeState(): Void {
