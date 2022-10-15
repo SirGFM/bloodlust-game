@@ -4,6 +4,7 @@ import haxe.Timer;
 
 import flixel.FlxG;
 import flixel.FlxSprite;
+import flixel.math.FlxPoint;
 import flixel.util.FlxColor;
 
 import bloodlust.events.Ifaces;
@@ -18,6 +19,7 @@ private enum PlayerState {
 	PREDASH;
 	DASHING;
 	DASH_ATTACK;
+	ATTACK;
 }
 
 private typedef Point = {
@@ -101,6 +103,10 @@ class Player extends FlxSprite
 				return PREDASH;
 			}
 			else if (this.plgInput.getAny([LEFT, RIGHT, UP, DOWN], PRESSED)) {
+				if (this.plgInput.get(ATTACK, JUST_PRESSED)) {
+					return ATTACK;
+				}
+
 				return WALK;
 			}
 
@@ -142,23 +148,40 @@ class Player extends FlxSprite
 
 			GameMath.setNormalizedPoint(this.velocity, p.x, p.y, speed);
 			this._cooldown = DASH_TIME;
-		case DASH_ATTACK:
-			this._cooldown = this._spanwer.newAttack(
+		case DASH_ATTACK | ATTACK:
+			var p: Point = {
+				x: 0.0,
+				y: 0.0
+			};
+
+			if (this._state == ATTACK) {
+				var tmp: FlxPoint = FlxPoint.get();
+
+				p = getRawDirection();
+				GameMath.setNormalizedPoint(tmp, p.x, p.y, 1.0);
+				p.x = tmp.x;
+				p.y = tmp.y;
+
+				tmp.put();
+			}
+
+			var time: Float = this._spanwer.newAttack(
 				this.x + this.width * 0.5,
 				this.y + this.height * 0.5,
-				0.0,
-				0.0,
+				p.x,
+				p.y,
 				Std.int(this.health),
 				this
 			);
 
 			/* Damage the player if it isn't able to launch a new attack. */
-			if (this._cooldown < 0.0) {
+			if (time < 0.0) {
 				this.hurt(1.0);
 				this._state = STAND;
 			}
-			else {
+			else if (this._state == DASH_ATTACK) {
 				this._hurtOnRecover = true;
+				this._cooldown = time;
 			}
 		default:
 			{ /* do nothing */ }
