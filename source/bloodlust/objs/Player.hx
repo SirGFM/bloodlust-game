@@ -20,6 +20,7 @@ private enum PlayerState {
 	DASHING;
 	DASH_ATTACK;
 	ATTACK;
+	HURT;
 }
 
 private typedef Point = {
@@ -36,6 +37,10 @@ class Player extends FlxSprite
 	static inline private var DASH_DISTANCE: Float = 125.0;
 	static inline private var DASH_TIME: Float = 0.3;
 	static inline private var BASE_HEALTH: Float = 5.0;
+
+	static inline private var HURT_FLASH_TIME: Float = 0.25;
+	static inline private var HURT_DURATION: Float = 1.0;
+	static inline private var HURT_INVINCIBILITY: Float = 1.75;
 
 	/* How long may the player take aiming. */
 	static inline private var AIM_TIME: Float = 5.0;
@@ -70,6 +75,9 @@ class Player extends FlxSprite
 
 	private var _cooldown: Float;
 
+	/** Time during which the player is invulnerable. */
+	private var _invulnerability: Float;
+
 	private var _lastState: PlayerState;
 	private var _state: PlayerState;
 
@@ -94,6 +102,9 @@ class Player extends FlxSprite
 		this._lastState = STAND;
 
 		this.health = BASE_HEALTH;
+
+		this._cooldown = 0.0;
+		this._invulnerability = 0.0;
 	}
 
 	private function getNewState(): PlayerState {
@@ -177,7 +188,6 @@ class Player extends FlxSprite
 			/* Damage the player if it isn't able to launch a new attack. */
 			if (time < 0.0) {
 				this.hurt(1.0);
-				this._state = STAND;
 			}
 			else if (this._state == DASH_ATTACK) {
 				this._hurtOnRecover = true;
@@ -264,6 +274,9 @@ class Player extends FlxSprite
 		if (this._cooldown > 0) {
 			this._cooldown -= elapsed;
 		}
+		if (this._invulnerability > 0) {
+			this._invulnerability -= elapsed;
+		}
 
 		this._state = this.getNewState();
 		if (this._state != this._lastState) {
@@ -284,6 +297,30 @@ class Player extends FlxSprite
 		super.update(elapsed);
 
 		this._lastState = this._state;
+	}
+
+	override public function draw() {
+		/* If the player is invulnerable, flicker it every 0.1s. */
+		if (
+			this._invulnerability > 0.0 &&
+			(Std.int(this._invulnerability * 10) & 0x1) == 0
+		) {
+			return;
+		}
+
+		super.draw();
+	}
+
+	override public function hurt(damage: Float) {
+		if (this._state == DASHING || this._invulnerability > 0) {
+			return;
+		}
+
+		super.hurt(damage);
+		FlxG.cameras.flash(FlxColor.WHITE, HURT_FLASH_TIME);
+		this._state = HURT;
+		this._cooldown = HURT_DURATION;
+		this._invulnerability = HURT_INVINCIBILITY;
 	}
 }
 
