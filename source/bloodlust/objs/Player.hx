@@ -12,6 +12,7 @@ import bloodlust.events.Type;
 import bloodlust.ui.PlaystateUi;
 import bloodlust.utils.Input;
 import bloodlust.utils.GameMath;
+import bloodlust.utils.SpriteFlash;
 
 private enum PlayerState {
 	STAND;
@@ -34,9 +35,12 @@ class Player extends FlxSprite
 {
 	static inline private var SPEED: Float = 175.0;
 	static inline private var PLAYER_SIZE: Int = 24;
+	static inline private var BASE_HEALTH: Float = 5.0;
+
 	static inline private var DASH_DISTANCE: Float = 125.0;
 	static inline private var DASH_TIME: Float = 0.3;
-	static inline private var BASE_HEALTH: Float = 5.0;
+	static inline private var DASH_COOLDOWN: Float = 0.25;
+	static inline private var DASH_REGAIN_FLASH_FX: Float = 0.25;
 
 	static inline private var HURT_FLASH_TIME: Float = 0.25;
 	static inline private var HURT_DURATION: Float = 1.0;
@@ -78,6 +82,9 @@ class Player extends FlxSprite
 	/** Time during which the player is invulnerable. */
 	private var _invulnerability: Float;
 
+	/** Time during which the player cannot dash. */
+	private var _noDash: Float;
+
 	private var _lastState: PlayerState;
 	private var _state: PlayerState;
 
@@ -86,6 +93,9 @@ class Player extends FlxSprite
 	/** Whether the player should be hurt when recovering the attack.
 	 * This should be set on dash attack, and cleared if any enemy is hit. */
 	private var _hurtOnRecover: Bool;
+
+	/** The flash effect sprite. */
+	private var _flash: SpriteFlash;
 
 	override public function new(spawner: AttackSpawner) {
 		super();
@@ -105,12 +115,14 @@ class Player extends FlxSprite
 
 		this._cooldown = 0.0;
 		this._invulnerability = 0.0;
+
+		this._flash = new SpriteFlash();
 	}
 
 	private function getNewState(): PlayerState {
 		switch (this._state) {
 		case STAND | WALK:
-			if (this.plgInput.get(DASH, JUST_PRESSED)) {
+			if (this._noDash <= 0 && this.plgInput.get(DASH, JUST_PRESSED)) {
 				return PREDASH;
 			}
 			else if (this.plgInput.getAny([LEFT, RIGHT, UP, DOWN], PRESSED)) {
@@ -277,6 +289,13 @@ class Player extends FlxSprite
 		if (this._invulnerability > 0) {
 			this._invulnerability -= elapsed;
 		}
+		if (this._noDash > 0) {
+			this._noDash -= elapsed;
+			if (this._noDash <= 0) {
+				this._flash.startEffect(DASH_REGAIN_FLASH_FX);
+			}
+		}
+		this._flash.update(elapsed);
 
 		this._state = this.getNewState();
 		if (this._state != this._lastState) {
@@ -290,6 +309,8 @@ class Player extends FlxSprite
 			this.setAim();
 		case STAND | DASH_ATTACK:
 			this.velocity.scale(0);
+		case DASHING:
+			this._noDash = DASH_COOLDOWN;
 		default:
 			{ /* do nothing */ }
 		}
@@ -309,6 +330,7 @@ class Player extends FlxSprite
 		}
 
 		super.draw();
+		this._flash.drawFx(this);
 	}
 
 	override public function hurt(damage: Float) {
