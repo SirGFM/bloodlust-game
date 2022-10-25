@@ -48,7 +48,7 @@ class PlayState extends FlxState implements AttackSpawner {
 	override public function update(elapsed:Float) {
 		super.update(elapsed);
 
-		FlxG.overlap(this, this, this.onOverlap);
+		FlxG.overlap(this, this, this.onOverlap, this.checkCircle);
 	}
 
 	/**
@@ -87,6 +87,29 @@ class PlayState extends FlxState implements AttackSpawner {
 	private function onOverlap(obj1: FlxObject, obj2: FlxObject): Void {
 		handleCollision(obj1, obj2);
 		handleCollision(obj2, obj1);
+	}
+
+	/**
+	 * If the objects are circles, check that the circles are overlapping.
+	 * Otherwise, simply separate the hitboxes.
+	 */
+	private function checkCircle(obj1: FlxObject, obj2: FlxObject): Bool {
+		if (
+			!Std.isOfType(obj1, CircleCollider) ||
+			!Std.isOfType(obj2, CircleCollider)
+		) {
+			/* Separate the objects, whatever they are. */
+			return FlxObject.separate(obj1, obj2);
+		}
+
+		var col1: CircleCollider = cast(obj1, CircleCollider);
+		var col2: CircleCollider = cast(obj2, CircleCollider);
+
+		var dx = obj1.x - obj2.x;
+		var dy = obj1.y - obj2.y;
+		var dist = col1.radius() + col2.radius();
+
+		return (dx * dx + dy * dy) < (dist * dist);
 	}
 
 	override public function draw() {

@@ -1,7 +1,6 @@
 package bloodlust.objs;
 
 import flixel.FlxObject;
-import flixel.FlxSprite;
 import flixel.util.FlxColor;
 
 import bloodlust.events.Ifaces;
@@ -14,7 +13,7 @@ private enum DiskState {
 	RECOVER;
 }
 
-class AttackDisc extends FlxSprite
+class AttackDisc extends Circle
 	implements IType
 	implements ProcessCollision
 {
@@ -40,7 +39,7 @@ class AttackDisc extends FlxSprite
 	private var _callback: AttackEvents;
 
 	override public function new() {
-		super();
+		super(MIN_RADIUS);
 
 		/* HaxeFlixel overwrites the sprites dimensions on the first draw
 		 * unless the graphics were previously initialized... */
@@ -116,6 +115,7 @@ class AttackDisc extends FlxSprite
 		var radius: Float = GameMath.linear(MIN_RADIUS, MAX_RADIUS, percentage);
 		this.width = radius * 2.0;
 		this.height = radius * 2.0;
+		this.setRadius(radius);
 
 		this.x = cx - this.width * 0.5;
 		this.y = cy - this.height * 0.5;

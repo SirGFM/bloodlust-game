@@ -3,7 +3,6 @@ package bloodlust.objs;
 import haxe.Timer;
 
 import flixel.FlxG;
-import flixel.FlxSprite;
 import flixel.math.FlxPoint;
 import flixel.util.FlxColor;
 
@@ -29,7 +28,7 @@ private typedef Point = {
 	y: Float,
 }
 
-class Player extends FlxSprite
+class Player extends Circle
 	implements AttackEvents
 	implements IType
 {
@@ -98,7 +97,7 @@ class Player extends FlxSprite
 	private var _flash: SpriteFlash;
 
 	override public function new(spawner: AttackSpawner) {
-		super();
+		super(PLAYER_SIZE * 0.5);
 
 		this.makeGraphic(PLAYER_SIZE, PLAYER_SIZE, FlxColor.RED);
 		this.plgInput = FlxG.plugins.get(Input);

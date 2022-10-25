@@ -21,3 +21,10 @@ interface ProcessCollision {
 	 */
 	public function onTouch(type: Type, other: FlxObject): Void;
 }
+
+interface CircleCollider {
+	/**
+	 * Retrieve the object's radius, for collision detection.
+	 */
+	public function radius(): Float;
+}
