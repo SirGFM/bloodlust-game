@@ -7,12 +7,18 @@ import bloodlust.events.Ifaces;
 import bloodlust.events.Type;
 import bloodlust.utils.GameMath;
 
+/**
+ * List of states the attack may be at.
+ */
 private enum DiskState {
 	FLY;
 	FLOAT;
 	RECOVER;
 }
 
+/**
+ * The player's attack.
+ */
 class AttackDisc extends Circle
 	implements IType
 	implements ProcessCollision

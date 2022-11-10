@@ -4,6 +4,12 @@ import flixel.FlxSprite;
 
 import bloodlust.events.Type;
 
+/**
+ * Helper class for circular sprites.
+ *
+ * Circle simply implements CircleCollider,
+ * so circular sprites doesn't need to implement the same methods every time.
+ */
 class Circle extends FlxSprite implements CircleCollider {
 	private var _radius: Float;
 

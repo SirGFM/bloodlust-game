@@ -1,5 +1,8 @@
 package bloodlust.events;
 
+/**
+ * Callbacks related to attacking, so projectiles may report back to the player what happened.
+ */
 interface AttackEvents {
 	/**
 	 * Callback called whenever an attack hits something.
@@ -17,6 +20,9 @@ interface AttackEvents {
 	public function onRecover(): Void;
 }
 
+/**
+ * Handles spawning attacks.
+ */
 interface AttackSpawner {
 	/**
 	 * Generate a new attack centered at (cx, cy)

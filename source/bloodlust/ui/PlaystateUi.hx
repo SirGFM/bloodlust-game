@@ -10,6 +10,12 @@ import flixel.util.FlxSpriteUtil;
 
 import bloodlust.utils.GameMath;
 
+/**
+ * UI, active while in the playstate.
+ *
+ * A global, easy to access object for displaying various UI elements.
+ * It's guaranteed to be rendered on top of every other state element.
+ */
 class PlaystateUi extends FlxGroup {
 
 	static inline private var AIM_BAR_HEIGHT: Int = 16;

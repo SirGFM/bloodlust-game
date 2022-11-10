@@ -5,6 +5,15 @@ import flixel.graphics.frames.FlxFrame;
 import flixel.util.FlxColor;
 import flixel.util.FlxSpriteUtil;
 
+/**
+ * Flash the associated sprite.
+ *
+ * A sprite that wants to use this object
+ * must call 'drawFx()' after its own 'draw()',
+ * calling 'startEffect()' to initiate the effect.
+ *
+ * This effect simply fades from white to transparent in the specified time.
+ */
 class SpriteFlash extends FlxSprite {
 
 	/** The animation tile on the previous frame. */

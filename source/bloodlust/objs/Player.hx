@@ -13,6 +13,9 @@ import bloodlust.utils.Input;
 import bloodlust.utils.GameMath;
 import bloodlust.utils.SpriteFlash;
 
+/**
+ * List of states that the player may be at.
+ */
 private enum PlayerState {
 	STAND;
 	WALK;
@@ -23,11 +26,17 @@ private enum PlayerState {
 	HURT;
 }
 
+/**
+ * Helper struct for heap-less(?) point objects.
+ */
 private typedef Point = {
 	x: Float,
 	y: Float,
 }
 
+/**
+ * The main character, controlled by user input.
+ */
 class Player extends Circle
 	implements AttackEvents
 	implements IType

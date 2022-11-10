@@ -2,12 +2,18 @@ package bloodlust.events;
 
 import flixel.FlxObject;
 
+/**
+ * Enumeration of types in the game (mainly for collision detection).
+ */
 enum Type {
 	UNKNOWN;
 	PLAYER;
 	ATTACK_DISC;
 }
 
+/**
+ * Report the object's in-game type.
+ */
 interface IType {
 	/**
 	 * Retrieve the object's type (used for game logic).
@@ -15,6 +21,9 @@ interface IType {
 	public function getType(): Type;
 }
 
+/**
+ * Events for handling collision.
+ */
 interface ProcessCollision {
 	/**
 	 * Event executed whenever this object touches another IType.
@@ -22,6 +31,9 @@ interface ProcessCollision {
 	public function onTouch(type: Type, other: FlxObject): Void;
 }
 
+/**
+ * Define the object as being a circle, for collision detection.
+ */
 interface CircleCollider {
 	/**
 	 * Retrieve the object's radius, for collision detection.

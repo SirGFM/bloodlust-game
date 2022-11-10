@@ -10,6 +10,12 @@ import bloodlust.objs.AttackDisc;
 import bloodlust.objs.Player;
 import bloodlust.ui.PlaystateUi;
 
+/**
+ * The main game state.
+ *
+ * This state is responsible for loading the correct stage,
+ * manage whether or not the player is alive, etc.
+ */
 class PlayState extends FlxState implements AttackSpawner {
 
 	private var plgUi: PlaystateUi;

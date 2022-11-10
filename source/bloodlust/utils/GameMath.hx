@@ -2,6 +2,9 @@ package bloodlust.utils;
 
 import flixel.math.FlxPoint;
 
+/**
+ * Helper class with math functions.
+ */
 class GameMath {
 
 	/**
