@@ -111,8 +111,8 @@ class PlayState extends FlxState implements AttackSpawner {
 		var col1: CircleCollider = cast(obj1, CircleCollider);
 		var col2: CircleCollider = cast(obj2, CircleCollider);
 
-		var dx = obj1.x - obj2.x;
-		var dy = obj1.y - obj2.y;
+		var dx = (obj1.x + obj1.width / 2) - (obj2.x + obj2.width / 2);
+		var dy = (obj1.y + obj1.height / 2) - (obj2.y + obj2.height / 2);
 		var dist = col1.radius() + col2.radius();
 
 		return (dx * dx + dy * dy) < (dist * dist);
