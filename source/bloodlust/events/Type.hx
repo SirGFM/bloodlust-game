@@ -42,3 +42,14 @@ interface CircleCollider {
 	 */
 	public function radius(): Float;
 }
+
+/**
+ * Detect the exact direction of a collision before separating the object.
+ */
+interface SeparateOnDirection {
+	/**
+	 * Detect the exact direction of a collision before separating the object.
+	 * This is guaranteed to be called before separating the object.
+	 */
+	public function detectCollisionDirection(other: FlxObject): Void;
+}

@@ -282,6 +282,15 @@ class PlayState extends FlxState implements AttackSpawner {
 			!Std.isOfType(obj1, CircleCollider) ||
 			!Std.isOfType(obj2, CircleCollider)
 		) {
+			if (Std.isOfType(obj1, SeparateOnDirection)) {
+				var sod: SeparateOnDirection = cast(obj1, SeparateOnDirection);
+				sod.detectCollisionDirection(obj2);
+			}
+			if (Std.isOfType(obj2, SeparateOnDirection)) {
+				var sod: SeparateOnDirection = cast(obj2, SeparateOnDirection);
+				sod.detectCollisionDirection(obj1);
+			}
+
 			/* Separate the objects, whatever they are. */
 			return FlxObject.separate(obj1, obj2);
 		}

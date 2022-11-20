@@ -1,7 +1,9 @@
 package bloodlust.objs;
 
 import flixel.FlxObject;
+import flixel.math.FlxPoint;
 import flixel.util.FlxColor;
+import flixel.util.FlxDirectionFlags;
 
 import bloodlust.events.Ifaces;
 import bloodlust.events.Type;
@@ -22,6 +24,7 @@ private enum DiskState {
 class AttackDisc extends Circle
 	implements IType
 	implements ProcessCollision
+	implements SeparateOnDirection
 {
 	static inline private var MIN_POWER: Float = 1.0;
 	static inline private var MAX_POWER: Float = 9.0;
@@ -44,6 +47,10 @@ class AttackDisc extends Circle
 
 	private var _callback: AttackEvents;
 
+	private var _curSpeed: FlxPoint;
+
+	private var _lastestSeparated: FlxDirectionFlags;
+
 	override public function new() {
 		super(MIN_RADIUS);
 
@@ -51,6 +58,7 @@ class AttackDisc extends Circle
 		 * unless the graphics were previously initialized... */
 		var size: Int = Std.int(MIN_RADIUS) * 2;
 		this.makeGraphic(size, size, FlxColor.BLUE);
+		this._curSpeed = new FlxPoint();
 
 		this.kill();
 	}
@@ -59,12 +67,42 @@ class AttackDisc extends Circle
 		return ATTACK_DISC;
 	}
 
+	public function detectCollisionDirection(other: FlxObject): Void {
+		var oldTouching = this.touching;
+
+		this.touching = NONE;
+		FlxObject.updateTouchingFlags(this, other);
+		this._lastestSeparated = this.touching;
+
+		this.touching = oldTouching;
+	}
+
 	public function onTouch(type: Type, other: FlxObject): Void {
 		switch (type) {
 		case PLAYER:
 			if (this._state == RECOVER) {
 				this._callback.onRecover();
 				this.kill();
+			}
+		case WALL:
+			/* Apparently, collision is somewhat buggy and
+			 * may incorrectly detect up/down collision when entering an object.
+			 * Sideways collision should actually hit both up and down,
+			 * which would be detectable and avoidable...
+			 *
+			 * Since that's not an option,
+			 * simply handle only a single direction at a time. */
+			if ((this._lastestSeparated & LEFT) != 0) {
+				this.velocity.x = Math.abs(this._curSpeed.x);
+			}
+			else if ((this._lastestSeparated & RIGHT) != 0) {
+				this.velocity.x = -Math.abs(this._curSpeed.x);
+			}
+			else if ((this._lastestSeparated & UP) != 0) {
+				this.velocity.y = Math.abs(this._curSpeed.y);
+			}
+			else if ((this._lastestSeparated & DOWN) != 0) {
+				this.velocity.y = -Math.abs(this._curSpeed.y);
 			}
 		default:
 			this._callback.didAttack();
@@ -129,6 +167,7 @@ class AttackDisc extends Circle
 
 		var speed: Float = getSpeed(this._power);
 		GameMath.setNormalizedPoint(this.velocity, dx, dy, speed);
+		this.velocity.copyTo(this._curSpeed);
 
 		this._state = FLY;
 		this._cooldown = GameMath.linear(
