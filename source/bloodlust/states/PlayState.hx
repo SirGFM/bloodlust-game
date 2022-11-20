@@ -7,6 +7,7 @@ import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxState;
 import flixel.FlxSprite;
+import flixel.tile.FlxTile;
 import flixel.tile.FlxTilemap;
 import flixel.util.FlxColor;
 import flixel.util.FlxSpriteUtil;
@@ -14,6 +15,7 @@ import flixel.util.FlxSpriteUtil;
 import bloodlust.events.Ifaces;
 import bloodlust.events.Type;
 import bloodlust.objs.AttackDisc;
+import bloodlust.objs.Grass;
 import bloodlust.objs.Player;
 import bloodlust.ui.PlaystateUi;
 import bloodlust.utils.Constants;
@@ -30,8 +32,10 @@ class Wall extends FlxObject implements IType {
  * This state is responsible for loading the correct stage,
  * manage whether or not the player is alive, etc.
  */
-class PlayState extends FlxState implements AttackSpawner {
-
+class PlayState extends FlxState
+	implements AttackSpawner
+	implements GrassMower
+{
 	private var plgUi: PlaystateUi;
 
 	private var _attack: AttackDisc;
@@ -50,6 +54,9 @@ class PlayState extends FlxState implements AttackSpawner {
 	/** Height of the current stage. */
 	private var _height: Int;
 
+	/** List of positions where enemies may spawn. */
+	private var _freeSpace: Array<Int>;
+
 	override public function create() {
 		super.create();
 
@@ -58,6 +65,8 @@ class PlayState extends FlxState implements AttackSpawner {
 
 		this._attack = new AttackDisc();
 		this._player = new Player(this);
+
+		this._freeSpace = new Array<Int>();
 
 		/* Parse the data from the current level. */
 		var data = new Array<Int>();
@@ -89,12 +98,14 @@ class PlayState extends FlxState implements AttackSpawner {
 					break;
 				}
 
+				var isEmpty: Bool = true;
 				switch (b) {
 				case "\n".code:
 					readline = false;
 					break;
 				case "w".code:
 					data.push(1);
+					isEmpty = false;
 				case "p".code:
 					data.push(0);
 					/* TODO: Adjust the player's initial position. */
@@ -105,6 +116,10 @@ class PlayState extends FlxState implements AttackSpawner {
 				case "-".code:
 					readLevel = false;
 					break;
+				}
+
+				if (isEmpty) {
+					this._freeSpace.push(x + y * this._width);
 				}
 				x++;
 			}
@@ -226,13 +241,27 @@ class PlayState extends FlxState implements AttackSpawner {
 			return -1.0;
 		}
 
-		return this._attack.activate(cx, cy, dx, dy, power, this._player);
+		return this._attack.activate(cx, cy, dx, dy, power, this._player, this);
+	}
+
+	public function grassMown(index: Int): Void {
+		this._freeSpace.push(index);
 	}
 
 	override public function update(elapsed:Float) {
 		super.update(elapsed);
 
 		FlxG.overlap(this, this, onOverlap, checkCircle);
+		/* If the tilemap collision happens within FlxG.overlap,
+		 * then the entire FlxTilemap would be the colliding object.
+		 * Thus, since the grass only collides with the attack,
+		 * handle this collision manually. */
+		if (this._attack.alive) {
+			/* The callback is buggy and doesn't set the idx properly...
+			 * Removing it and setting a per-tile-type-callback works perfectly, though...
+			 * Honestly, fuck HaxeFlixel!. */
+			this._grass.overlapsWithCallback(this._attack);
+		}
 	}
 
 	/**
@@ -242,6 +271,9 @@ class PlayState extends FlxState implements AttackSpawner {
 		if (Std.isOfType(obj, IType)) {
 			var iface: IType = cast(obj, IType);
 			return iface.getType();
+		}
+		else if (Std.isOfType(obj, FlxTile)) {
+			return TILE;
 		}
 		else {
 			return UNKNOWN;
@@ -262,6 +294,17 @@ class PlayState extends FlxState implements AttackSpawner {
 		var col: ProcessCollision = cast(self, ProcessCollision);
 
 		var otherType: Type = getType(other);
+		if (
+			otherType == TILE &&
+			Std.isOfType(self, CircleCollider)
+		) {
+			var grass = new Grass(other.x, other.y);
+
+			if (!checkCircle(grass, self)) {
+				return;
+			}
+		}
+
 		col.onTouch(otherType, other);
 	}
 

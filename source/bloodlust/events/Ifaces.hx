@@ -46,3 +46,13 @@ interface AttackSpawner {
 		cb: AttackEvents
 	): Float;
 }
+
+/**
+ * Handle reporting when any grass patch is mown.
+ */
+interface GrassMower {
+	/**
+	 * Callback called whenever a patch of grass is mown.
+	 */
+	public function grassMown(index: Int): Void;
+}

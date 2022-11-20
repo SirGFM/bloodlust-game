@@ -2,6 +2,7 @@ package bloodlust.objs;
 
 import flixel.FlxObject;
 import flixel.math.FlxPoint;
+import flixel.tile.FlxTile;
 import flixel.util.FlxColor;
 import flixel.util.FlxDirectionFlags;
 
@@ -47,6 +48,8 @@ class AttackDisc extends Circle
 
 	private var _callback: AttackEvents;
 
+	private var _level: GrassMower;
+
 	private var _curSpeed: FlxPoint;
 
 	private var _lastestSeparated: FlxDirectionFlags;
@@ -83,6 +86,13 @@ class AttackDisc extends Circle
 			if (this._state == RECOVER) {
 				this._callback.onRecover();
 				this.kill();
+			}
+		case TILE:
+			var tile = cast(other, FlxTile);
+
+			if (Grass.isGrass(tile)) {
+				Grass.mown(tile);
+				this._level.grassMown(tile.index);
 			}
 		case WALL:
 			/* Apparently, collision is somewhat buggy and
@@ -148,7 +158,8 @@ class AttackDisc extends Circle
 		dx: Float,
 		dy: Float,
 		power: Int,
-		cb: AttackEvents
+		cb: AttackEvents,
+		level: GrassMower
 	): Float {
 		this._power = Math.max(power, MIN_POWER);
 		this._power = Math.min(this._power, MAX_POWER);
@@ -183,6 +194,7 @@ class AttackDisc extends Circle
 		);
 
 		this._callback = cb;
+		this._level = level;
 
 		this.revive();
 		return this._cooldown + floatTime;

@@ -2,6 +2,26 @@
 
 An action game highly inspired by [255 (by ZahranW)](https://zahranworrell.itch.io/255).
 
+Well...
+
+And also quite based on [Lawn Mower (by Shiru)](https://shiru.untergrund.net/software.shtml) for the NES.
+
+## Lore
+
+After years of searching, you finally found the **legendary mower.**
+
+However, no legend mention the curse that comes alongside it...
+
+Any lawn that is to be mowed by it start growing weird monstruous creatures.
+
+Also, although the mower doesn't use fuel... It yearns for **souls**!
+
+And if it can get souls from the creatures in the lawn, it shal get its fix...
+
+from...
+
+**YOU**!
+
 ## Cross compiling on Linux
 
 This section describes my thought process for cross compiling this targeting Windows.
