@@ -1,14 +1,22 @@
 package bloodlust.states;
 
+import haxe.io.Eof;
+import sys.io.File;
+
 import flixel.FlxG;
 import flixel.FlxObject;
 import flixel.FlxState;
+import flixel.FlxSprite;
+import flixel.tile.FlxTilemap;
+import flixel.util.FlxColor;
+import flixel.util.FlxSpriteUtil;
 
 import bloodlust.events.Ifaces;
 import bloodlust.events.Type;
 import bloodlust.objs.AttackDisc;
 import bloodlust.objs.Player;
 import bloodlust.ui.PlaystateUi;
+import bloodlust.utils.Constants;
 
 /**
  * The main game state.
@@ -23,6 +31,19 @@ class PlayState extends FlxState implements AttackSpawner {
 	private var _attack: AttackDisc;
 	private var _player: Player;
 
+	/** Temporary sprite atlas for the grass tilemap. */
+	private var _tmpAtlas: FlxSprite;
+
+	/** The grass tilemap; handles collision separately from everything else,
+	 * so it may more easily collide with the attack. */
+	private var _grass: FlxTilemap;
+
+	/** Width of the current stage. */
+	private var _width: Int;
+
+	/** Height of the current stage. */
+	private var _height: Int;
+
 	override public function create() {
 		super.create();
 
@@ -30,10 +51,115 @@ class PlayState extends FlxState implements AttackSpawner {
 		plgUi.onEnterPlaystate();
 
 		this._attack = new AttackDisc();
-		this.add(this._attack);
-
 		this._player = new Player(this);
+
+		/* Parse the data from the current level. */
+		var data = new Array<Int>();
+
+		/* TODO: Change which level is being loaded. */
+		var fp = File.read(AssetPaths.level_0__txt, true);
+		var y: Int = 0;
+		var x: Int = 0;
+		this._width = 0;
+
+		var readLevel: Bool = true;
+		while (!fp.eof() && readLevel) {
+			x = 0;
+
+			var readline: Bool = true;
+			while (!fp.eof() && readline) {
+				var posX: Int = Constants.TILE_SIZE * x;
+				var posY: Int = Constants.TILE_SIZE * y;
+				var b: Int;
+
+				/* There doesn't seem to be any way to check
+				 * if the file has ended other than
+				 * trying to read it and catching the exception... */
+				try {
+					b = fp.readByte();
+				} catch (_: Eof) {
+					readline = false;
+					readLevel = false;
+					break;
+				}
+
+				switch (b) {
+				case "\n".code:
+					readline = false;
+					break;
+				case "w".code:
+					data.push(1);
+				case "p".code:
+					data.push(0);
+					/* TODO: Adjust the player's initial position. */
+					this._player.x = posX + 8;
+					this._player.y = posY + 8;
+				case ".".code:
+					data.push(0);
+				case "-".code:
+					readLevel = false;
+					break;
+				}
+				x++;
+			}
+
+			if (this._width == 0) {
+				this._width = x;
+			}
+			else if (this._width != x && !(fp.eof() && x == 0)) {
+				throw new haxe.Exception('Inconsistent line length at line $y: want ${this._width}, got $x');
+			}
+
+			if (readLevel) {
+				y++;
+			}
+		}
+
+		/* Create a temporary atlas for the tilemap. */
+		this._tmpAtlas = new FlxSprite();
+		this._tmpAtlas.makeGraphic(
+			Constants.TILE_SIZE * 2, /* width */
+			Constants.TILE_SIZE /* height */
+		);
+		FlxSpriteUtil.drawRect(
+			this._tmpAtlas,
+			0, /* x */
+			0, /* y */
+			Constants.TILE_SIZE * 2, /* width */
+			Constants.TILE_SIZE, /* height */
+			FlxColor.BROWN
+		);
+		FlxSpriteUtil.drawCircle(
+			this._tmpAtlas,
+			Constants.TILE_SIZE * 1.5, /* x */
+			Constants.TILE_SIZE * 0.5, /* y */
+			Constants.TILE_SIZE * 0.5, /* radius */
+			FlxColor.GREEN
+		);
+
+		/* Load the grass from the parsed data. */
+		this._grass = new FlxTilemap();
+		this._grass.loadMapFromArray(
+			data,
+			this._width,
+			y,
+			this._tmpAtlas.graphic,
+			Constants.TILE_SIZE,
+			Constants.TILE_SIZE,
+			null,
+			0,
+			0
+		);
+		this._grass.setTileProperties(1, ANY, onOverlap, 1);
+		this.add(this._grass);
+		this._grass.solid = false;
+
+		this.add(this._attack);
 		this.add(this._player);
+
+		/* Configure the level's dimensions. */
+		this._width *= Constants.TILE_SIZE;
+		this._height = y * Constants.TILE_SIZE;
 	}
 
 	public function newAttack(

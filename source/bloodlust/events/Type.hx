@@ -9,6 +9,7 @@ enum Type {
 	UNKNOWN;
 	PLAYER;
 	ATTACK_DISC;
+	TILE;
 }
 
 /**
