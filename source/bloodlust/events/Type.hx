@@ -10,6 +10,7 @@ enum Type {
 	PLAYER;
 	ATTACK_DISC;
 	TILE;
+	WALL;
 }
 
 /**

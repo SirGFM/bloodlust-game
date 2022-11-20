@@ -18,6 +18,12 @@ import bloodlust.objs.Player;
 import bloodlust.ui.PlaystateUi;
 import bloodlust.utils.Constants;
 
+class Wall extends FlxObject implements IType {
+	public function getType(): Type {
+		return WALL;
+	}
+}
+
 /**
  * The main game state.
  *
@@ -160,6 +166,52 @@ class PlayState extends FlxState implements AttackSpawner {
 		/* Configure the level's dimensions. */
 		this._width *= Constants.TILE_SIZE;
 		this._height = y * Constants.TILE_SIZE;
+
+		FlxG.worldBounds.set(
+				-Constants.TILE_SIZE, /* x */
+				-Constants.TILE_SIZE, /* y */
+				this._width + 2 * Constants.TILE_SIZE, /* width */
+				this._height + 2 * Constants.TILE_SIZE /* height */
+		);
+		FlxG.camera.setScrollBounds(0, this._width, 0, this._height);
+
+		this.addWall(
+			-Constants.TILE_SIZE, /* x */
+			0, /* y */
+			Constants.TILE_SIZE, /* width */
+			this._height /* height */
+		);
+		this.addWall(
+			this._width, /* x */
+			0, /* y */
+			Constants.TILE_SIZE, /* width */
+			this._height /* height */
+		);
+		this.addWall(
+			0, /* x */
+			-Constants.TILE_SIZE, /* y */
+			this._width, /* width */
+			Constants.TILE_SIZE /* height */
+		);
+		this.addWall(
+			0, /* x */
+			this._height, /* y */
+			this._width, /* width */
+			Constants.TILE_SIZE /* height */
+		);
+	}
+
+	private function addWall(
+		x: Float,
+		y: Float,
+		width: Float,
+		height: Float
+	): Void {
+		var obj: FlxObject;
+
+		obj = new Wall(x, y, width, height);
+		obj.immovable = true;
+		this.add(obj);
 	}
 
 	public function newAttack(
