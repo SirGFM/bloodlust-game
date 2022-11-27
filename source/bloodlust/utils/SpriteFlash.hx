@@ -16,6 +16,12 @@ import flixel.util.FlxSpriteUtil;
  */
 class SpriteFlash extends FlxSprite {
 
+	/** Color of the flashing effect. */
+	private var _flashColor: FlxColor;
+
+	/** The baseline alpha factor of the effect. */
+	private var _baseAlpha: Float;
+
 	/** The animation tile on the previous frame. */
 	private var _lastFrame: FlxFrame;
 
@@ -32,9 +38,18 @@ class SpriteFlash extends FlxSprite {
 		this._curDuration = 0.0;
 	}
 
-	public function startEffect(duration: Float): Void {
+	public function startEffect(
+		duration: Float,
+		color: FlxColor = FlxColor.WHITE
+	): Void {
 		this._curDuration = duration;
 		this._totalDuration = duration;
+
+		/* Color isn't an unsigned value...
+		 * So trying to extract the 8 higher bits
+		 * could lead to negative numbers in some platforms. */
+		this._baseAlpha = (0xff & (color >> 24)) / 255.0;
+		this._flashColor = (color | 0xFF000000);
 	}
 
 	override public function update(elapsed: Float) {
@@ -42,7 +57,9 @@ class SpriteFlash extends FlxSprite {
 
 		if (this._curDuration > 0.0) {
 			this._curDuration -= elapsed;
-			this.alpha = this._curDuration / this._totalDuration;
+
+			var dt: Float = this._curDuration / this._totalDuration;
+			this.alpha = this._baseAlpha * dt;
 		}
 	}
 
@@ -53,7 +70,7 @@ class SpriteFlash extends FlxSprite {
 
 		/* Regenerate the flash sprite whenever needed. */
 		if (source.frame != this._lastFrame) {
-			this.makeGraphic(source.frameWidth, source.frameHeight, FlxColor.WHITE);
+			this.makeGraphic(source.frameWidth, source.frameHeight, this._flashColor);
 			FlxSpriteUtil.alphaMask(this, this.pixels, source.pixels);
 
 			this._lastFrame = source.frame;
